@@ -108,27 +108,27 @@
   padding: 20%;
 }
 
-.item1 {
+.NSFW {
   grid-area: header;
   min-height: 100px;
   background-color: #ec6262;
 }
-.item2 {
+.ART {
   grid-area: menu;
   height: 100%;
   background-color: #83d6b7;
 }
-.item3 {
+.FOOD {
   grid-area: main;
   min-height: 50px;
   background-color: #e1d267;
 }
-.item4 {
+.SFW {
   grid-area: right;
   min-height: 50px;
   background-color: #e4a8f9;
 }
-.item5 {
+.ANIMALS {
   grid-area: footer;
   min-height: 100px;
   background-color: #99ea86;

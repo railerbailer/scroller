@@ -32,8 +32,8 @@ class TopMenu extends Component {
   };
   renderMenu = () => {
     const categories = ["NSFW", "SFW", "ART", "ANIMALS", "FOOD"];
-    const menuItems = categories.map(category => (
-      <Menu.Item>
+    const menuItems = categories.map((category, key) =>   (
+      <Menu.Item key={key}>
         <div onClick={e => this.changeCat(e, category)}>{category}</div>
       </Menu.Item>
     ));
@@ -103,8 +103,7 @@ class TopMenu extends Component {
           </Transition>
         </div>
 
-          <h1 className="logo">sliddit.</h1>
-
+        <h1 className="logo">sliddit.</h1>
 
         <Dropdown
           visible={this.state.isDropDownShowing}
