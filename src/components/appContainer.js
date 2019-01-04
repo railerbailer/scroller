@@ -15,7 +15,7 @@ class AppContainer extends Component {
       <BrowserRouter>
         <React.Fragment>
           <TopMenu />
-          <Route path="/slider/:category/:subreddit" component={MediaSlider} />
+          <Route path="/:category/:subreddit" component={MediaSlider} />
           <Route path="/" exact component={CategoryButtons} />
         </React.Fragment>
       </BrowserRouter>

@@ -1,19 +1,11 @@
 import React, { Component } from "react";
 import "../App.css";
-import {
-  Icon,
-  Button,
-  Spin,
-  message,
-  notification,
-  Menu,
-  Dropdown,
-  AutoComplete,
-  Switch
-} from "antd";
+import { Icon, Button, Spin, message, notification } from "antd";
 import { debounce } from "lodash";
 import { Transition } from "react-transition-group";
 import Swipeable from "react-swipeable";
+import { Redirect } from "react-router-dom";
+
 import {
   subredditArray,
   NSFW,
@@ -21,6 +13,8 @@ import {
   foodArray,
   animalsArray
 } from "../data/subreddits.js";
+let goBack = [];
+let goBackIndex = 0;
 class MediaSlider extends Component {
   constructor(props) {
     super(props);
@@ -28,41 +22,167 @@ class MediaSlider extends Component {
 
     this.state = {
       isLoading: false,
-      // isOnlyGifsShowing: false,
+      isOnlyGifsShowing: false,
       loop: true,
       autoPlay: true,
       sliderData: [],
       subreddit: "",
-      activeSlide: 0,
+      activeSlide: 0
     };
   }
   componentDidMount() {
+    // await this.test();
+    this.getSubreddit(this.props.match.params.subreddit);
+
     message.info(
       `Category is ${
         this.props.match.params.category
       }, press or swipe right to shuffle subreddit`
     );
   }
+  shuffleArray = array => {
+    let random = Math.floor(Math.random() * array.length);
+    return array[random];
+  };
+  //checks for file type
+  checkGif(url) {
+    return url.match(/\.(gif)$/) !== null;
+  }
+  checkImg(url) {
+    return url.match(/\.(jpeg|jpg|png)$/) !== null;
+  }
+
+  removeHtmlFromUrl(url) {
+    let editedUrl = "";
+    editedUrl = url
+      .replace(/&gt;/gi, ">")
+      .replace(/&lt;/gi, "<")
+      .replace(/&amp;/gi, "&");
+    return editedUrl;
+  }
+
+  next = debounce(async () => {
+    this.state.sliderData.length - 1 === this.state.activeSlide &&
+      this.setState({ activeSlide: -1 });
+    this.setState({ activeSlide: this.state.activeSlide + 1 });
+    this.setState({ isVideoLoading: this.videoPlayer && true });
+    this.state.isDropDownShowing && this.showDropDown();
+
+    !this.state.activeSlide &&
+      this.state.sliderData.length &&
+      this.moreSubreddits();
+  }, 100);
+  previous = async () => {
+    if (this.state.activeSlide) {
+      const infiniteScroll =
+        (await this.state.activeSlide) <= 0
+          ? this.state.sliderData.length && this.state.sliderData.length - 1
+          : this.state.activeSlide - 1;
+      this.setState({ activeSlide: infiniteScroll });
+      this.setState({ isVideoLoading: this.videoPlayer && true });
+    }
+    // this.state.activeSlide===0 && this.goBackSubreddits();
+  };
+
+  switchCat = async () => {
+    this.state.isDropDownShowing && this.showDropDown();
+    this.setState({ isVideoLoading: true });
+    await this.setState({ activeSlide: 0 });
+    if (goBackIndex > 0) {
+      goBackIndex = goBackIndex - 1;
+      if (this.state.subreddit === goBack[goBack.length - 1 - goBackIndex]) {
+        !this.state.isLoading &&
+          this.getSubreddit(goBack[goBack.length - goBackIndex]);
+      } else
+        !this.state.isLoading &&
+          this.getSubreddit(goBack[goBack.length - 1 - goBackIndex]);
+    } else {
+      !this.state.isLoading &&
+        this.getSubreddit(
+          this.shuffleArray(this.dataHandler(this.props.match.params.category))
+        );
+      if (
+        goBackIndex === 0 &&
+        goBack[goBack.length - 1] !== this.state.subreddit
+      ) {
+        await goBack.push(this.state.subreddit);
+      }
+    }
+  };
+
+  goBackToLast = async () => {
+    this.setState({ isVideoLoading: true });
+    if (goBack.length > 1 && goBack[0] !== this.state.subreddit) {
+      if (this.state.subreddit === goBack[goBack.length - 1 - goBackIndex]) {
+        this.getSubreddit(goBack[goBack.length - 2 - goBackIndex]);
+      } else this.getSubreddit(goBack[goBack.length - 1 - goBackIndex]);
+    }
+    goBackIndex < goBack.length
+      ? (goBackIndex = goBackIndex + 1)
+      : console.log("doing nothin...");
+
+    if (!goBack.includes(this.state.subreddit)) {
+      await goBack.push(this.state.subreddit);
+    }
+  };
+
+  handleKeyDown = e => {
+    const { isSearchActivated } = this.state;
+    if (e.key === "ArrowLeft") {
+      !isSearchActivated && this.goBackToLast();
+    }
+    if (e.key === "a") {
+      !isSearchActivated && this.goBackToLast();
+    }
+    if (e.key === "ArrowDown") {
+      !isSearchActivated && this.next();
+    }
+
+    if (e.key === "s") {
+      !isSearchActivated && this.next();
+    }
+    if (e.key === "w") {
+      !isSearchActivated && this.previous();
+    }
+    if (e.key === " ") {
+      if (this.videoPlayer) {
+        if (this.videoPlayer.paused) {
+          !isSearchActivated && this.videoPlayer.play();
+        } else !isSearchActivated && this.videoPlayer.pause();
+      }
+    }
+
+    if (e.key === "ArrowUp") {
+      !isSearchActivated && this.previous();
+    }
+    if (e.key === "ArrowRight") {
+      !isSearchActivated && this.switchCat();
+    }
+    if (e.key === "d") {
+      !isSearchActivated && this.switchCat();
+    }
+  };
   dataHandler(props) {
-    if (props === "NSFW") {
+    if (props === "nsfw") {
       return NSFW;
     }
-    if (props === "SFW") {
+    if (props === "sfw") {
       return subredditArray;
     }
-    if (props === "Art") {
+    if (props === "art") {
       return artArray;
     }
-    if (props === "Food") {
+    if (props === "food") {
       return foodArray;
     }
-    if (props === "Animals") {
+    if (props === "animals") {
       return animalsArray;
     } else {
       return subredditArray;
     }
   }
   getSubreddit = async subreddit => {
+    console.log(subreddit)
     await this.setState({
       subreddit: subreddit,
       sliderData: [],
@@ -137,57 +257,62 @@ class MediaSlider extends Component {
     this.setState({ isLoading: false });
   };
 
-swipedLeft = (e, absX, isFlick) => {
-  if (isFlick || absX > 30) {
-    this.switchCat();
-  }
-};
+  swipedLeft = (e, absX, isFlick) => {
+    if (isFlick || absX > 30) {
+      this.switchCat();
+    }
+  };
 
-swipedRight = (e, absX, isFlick) => {
-  if (isFlick || absX > 30) {
-    this.goBackToLast();
-  }
-};
-swipedUp = (e, deltaY, isFlick) => {
-  if (isFlick) {
-    this.next();
-  }
-};
-swipedDown = (e, deltaY, isFlick) => {
-  if (isFlick) {
-    this.previous();
-  }
-};
-//Isvideoloading
-isVideoLoading = () => {
-  this.state.sliderData.length === 0
-    ? this.setState({ spinning: true })
-    : this.setState({ spinning: false });
-};
+  swipedRight = (e, absX, isFlick) => {
+    if (isFlick || absX > 30) {
+      this.goBackToLast();
+    }
+  };
+  swipedUp = (e, deltaY, isFlick) => {
+    if (isFlick) {
+      this.next();
+    }
+  };
+  swipedDown = (e, deltaY, isFlick) => {
+    if (isFlick) {
+      this.previous();
+    }
+  };
+  //Isvideoloading
+  isVideoLoading = () => {
+    this.state.sliderData.length === 0
+      ? this.setState({ spinning: true })
+      : this.setState({ spinning: false });
+  };
 
-//SEARCH
-handleSearch = value => {
-  if (!value) {
-    value = "Type your search";
-  }
-  let result = this.dataHandler(this.props.category).filter(str =>
-    str.toLowerCase().includes(value.toLowerCase())
-  );
-  result = result.reverse();
-  result.push(value);
-  result = result.reverse();
-  this.setState({ dataSource: result.slice(0, 7) });
-  console.log(this.state.dataSource);
-};
-onSelect = value => {
-  this.getSubreddit(value);
-  this.searchBoxOpenClose();
-};
-searchBoxOpenClose = () => {
-  this.setState({ isSearchActivated: !this.state.isSearchActivated });
-};
+  //SEARCH
+  handleSearch = value => {
+    if (!value) {
+      value = "Type your search";
+    }
+    let result = this.dataHandler(this.props.match.params.category).filter(
+      str => str.toLowerCase().includes(value.toLowerCase())
+    );
+    result = result.reverse();
+    result.push(value);
+    result = result.reverse();
+    this.setState({ dataSource: result.slice(0, 7) });
+    console.log(this.state.dataSource);
+  };
+  onSelect = value => {
+    this.getSubreddit(value);
+    this.searchBoxOpenClose();
+  };
+  searchBoxOpenClose = () => {
+    this.setState({ isSearchActivated: !this.state.isSearchActivated });
+  };
   render() {
-    console.log(()=>this.getSubreddit())
+    console.log(
+
+        this.props.match
+
+    );
+
     return (
       <Swipeable
         className="wrapper"
@@ -197,6 +322,14 @@ searchBoxOpenClose = () => {
         onSwipedLeft={this.swipedLeft}
         onSwipedRight={this.swipedRight}
       >
+        {!this.state.isSearchActivated && (
+          <button
+            ref={button =>
+              button && !this.state.isSearchActivated && button.focus()
+            }
+          />
+        )}
+        {/* <Redirect push to={`/${this.props.match.params.category}/${this.props.match.params.subreddit}`}/> */}
         {this.state.isLoading ? (
           <button autoFocus className="subRedditTitle">
             <Spin wrapperClassName="subRedditTitle" size="large" />
@@ -258,7 +391,7 @@ searchBoxOpenClose = () => {
                   muted
                   playsInline
                   autoPlay={this.state.autoPlay}
-                  poster={this.imageParser(
+                  poster={this.removeHtmlFromUrl(
                     children.data.preview.images[0].resolutions[1].url || ""
                   )}
                   preload="none"
@@ -412,7 +545,7 @@ searchBoxOpenClose = () => {
                   muted
                   playsInline
                   autoPlay={this.state.autoPlay}
-                  poster={this.imageParser(
+                  poster={this.removeHtmlFromUrl(
                     children.data.preview.images[0].resolutions[1].url || ""
                   )}
                   loop={this.state.loop}
@@ -455,10 +588,10 @@ searchBoxOpenClose = () => {
           zeroNullData = true;
           return (
             <div className="imgDiv" key={i}>
-               <h2 className="titlesLeft">
-              <Icon type="tag-o" />
-              {this.state.subreddit}
-            </h2>
+              <h2 className="titlesLeft">
+                <Icon type="tag-o" />
+                {this.state.subreddit}
+              </h2>
               <p className="titleText">{children.data.title}</p>
               <Transition
                 in={true}
@@ -470,7 +603,7 @@ searchBoxOpenClose = () => {
                 {status => (
                   <img
                     className={`image transition--${status}`}
-                    src={this.imageParser(
+                    src={this.removeHtmlFromUrl(
                       children.data.preview.images[0].source.url
                     )}
                     alt="{logo}"
@@ -488,10 +621,10 @@ searchBoxOpenClose = () => {
           zeroNullData = true;
           return (
             <div className="imgDiv" key={i}>
-               <h2 className="titlesLeft">
-              <Icon type="tag-o" />
-              {this.state.subreddit}
-            </h2>
+              <h2 className="titlesLeft">
+                <Icon type="tag-o" />
+                {this.state.subreddit}
+              </h2>
               <p className="titleText">{children.data.title}</p>
               <Transition
                 in={true}
@@ -503,7 +636,7 @@ searchBoxOpenClose = () => {
                 {status => (
                   <img
                     className={`image transition--${status}`}
-                    src={this.imageParser(
+                    src={this.removeHtmlFromUrl(
                       children.data.preview.images[0].resolutions[3].url
                     )}
                     alt="{logo}"
@@ -521,10 +654,10 @@ searchBoxOpenClose = () => {
           zeroNullData = true;
           return (
             <div className="imgDiv" key={i}>
-               <h2 className="titlesLeft">
-              <Icon type="tag-o" />
-              {this.state.subreddit}
-            </h2>
+              <h2 className="titlesLeft">
+                <Icon type="tag-o" />
+                {this.state.subreddit}
+              </h2>
               <p className="titleText">{children.data.title}</p>
               <Transition
                 in={true}
@@ -536,7 +669,7 @@ searchBoxOpenClose = () => {
                 {status => (
                   <img
                     className={`image transition--${status}`}
-                    src={this.imageParser(
+                    src={this.removeHtmlFromUrl(
                       children.data.preview.images[0].resolutions[4].url
                     )}
                     alt="{logo}"
@@ -562,3 +695,32 @@ searchBoxOpenClose = () => {
 }
 
 export default MediaSlider;
+const styles = {
+  iconLeft: {
+    cursor: "pointer",
+    backgroundColor: "transparent",
+    opacity: 0.6,
+    height: "100%",
+    position: "absolute",
+    zIndex: 1,
+    paddingRight: "20%",
+    right: 1,
+    textAlign: "left",
+    fontSize: "24px",
+    color: "white",
+    left: 0
+  },
+  iconRight: {
+    cursor: "pointer",
+    backgroundColor: "transparent",
+    opacity: 0.6,
+    height: "100%",
+    position: "absolute",
+    zIndex: 1,
+    paddingLeft: "20%",
+    right: 1,
+    textAlign: "right",
+    fontSize: "24px",
+    color: "white"
+  }
+};
