@@ -27,7 +27,8 @@ class MediaSlider extends Component {
       autoPlay: true,
       sliderData: [],
       subreddit: "",
-      activeSlide: 0
+      activeSlide: 0,
+      imageQuality: 2
     };
   }
   componentDidMount() {
@@ -182,7 +183,7 @@ class MediaSlider extends Component {
     }
   }
   getSubreddit = async subreddit => {
-    console.log(subreddit)
+    console.log(subreddit);
     await this.setState({
       subreddit: subreddit,
       sliderData: [],
@@ -199,8 +200,8 @@ class MediaSlider extends Component {
           before: jsonData.data.after
         });
         let childs = jsonData.data.children;
+        console.log(childs);
         this.dataToHtml(childs);
-        console.log(this.state.activeSlide);
       })
       .catch(() => {
         this.getSubreddit(
@@ -307,11 +308,7 @@ class MediaSlider extends Component {
     this.setState({ isSearchActivated: !this.state.isSearchActivated });
   };
   render() {
-    console.log(
-
-        this.props.match
-
-    );
+    console.log(this.props.match);
 
     return (
       <Swipeable
@@ -365,7 +362,99 @@ class MediaSlider extends Component {
       </Swipeable>
     );
   }
+
   dataToHtml = data => {
+    let datavar = data.map((children, i) => {
+      const { preview, thumbnail, media, title, post_hint } = children.data;
+      const { images, reddit_video_preview } = preview;
+
+      if (post_hint === "image")
+        return (
+          <div className="imgDiv" key={i}>
+            <p className="titleText">{title}</p>
+            <Transition
+              in={true}
+              appear={true}
+              unmountOnExit
+              mountOnEnter
+              timeout={1000}
+            >
+              {status => (
+                <img
+                  className={`image transition--${status}`}
+                  src={this.removeHtmlFromUrl(
+                    images[0].resolutions[this.state.imageQuality].url
+                  )}
+                  alt={this.removeHtmlFromUrl(images[0].source.url)}
+                />
+              )}
+            </Transition>
+          </div>
+        );
+      else
+        return (
+          <div className="videoDiv" key={i}>
+            <p className="titleText">{title}</p>
+            <Transition
+              in={true}
+              appear={true}
+              unmountOnExit
+              mountOnEnter
+              timeout={1000}
+            >
+              {status => (
+                <video
+                  onCanPlay={() => this.setState({ isVideoLoading: false })}
+                  className={`video transition--${status}`}
+                  ref={el => (this.videoPlayer = el)}
+                  muted
+                  playsInline
+                  autoPlay={this.state.autoPlay}
+                  poster={this.removeHtmlFromUrl(
+                    (preview && images[0].resolutions[0].url) || thumbnail
+                  )}
+                  preload="auto"
+                  loop={this.state.loop}
+                >
+                  <source
+                    type="video/mp4"
+                    src={
+                      reddit_video_preview &&
+                      reddit_video_preview.scrubber_media_url
+                    }
+                  />
+                  <source
+                    type="video/mp4"
+                    src={
+                      media &&
+                      media.reddit_video &&
+                      media.reddit_video.scrubber_media_url
+                    }
+                  />
+
+                  <p>
+                    Your browser doesn't support HTML5 video. Here is a{" "}
+                    <a
+                      href={
+                        reddit_video_preview &&
+                        reddit_video_preview.scrubber_media_url
+                      }
+                    >
+                      link to the video
+                    </a>{" "}
+                    instead.
+                  </p>
+                </video>
+              )}
+            </Transition>
+          </div>
+        );
+    });
+
+    this.setState({ sliderData: datavar.filter(e => e !== null) });
+  };
+
+  olddataToHtml = data => {
     let zeroNullData = false;
     let datavar = data.map((children, i) => {
       if (
@@ -605,72 +694,6 @@ class MediaSlider extends Component {
                     className={`image transition--${status}`}
                     src={this.removeHtmlFromUrl(
                       children.data.preview.images[0].source.url
-                    )}
-                    alt="{logo}"
-                  />
-                )}
-              </Transition>
-            </div>
-          );
-        }
-
-        if (
-          children.data.preview.images[0].resolutions[3] &&
-          sizeRatio > 1500
-        ) {
-          zeroNullData = true;
-          return (
-            <div className="imgDiv" key={i}>
-              <h2 className="titlesLeft">
-                <Icon type="tag-o" />
-                {this.state.subreddit}
-              </h2>
-              <p className="titleText">{children.data.title}</p>
-              <Transition
-                in={true}
-                appear={true}
-                unmountOnExit
-                mountOnEnter
-                timeout={1000}
-              >
-                {status => (
-                  <img
-                    className={`image transition--${status}`}
-                    src={this.removeHtmlFromUrl(
-                      children.data.preview.images[0].resolutions[3].url
-                    )}
-                    alt="{logo}"
-                  />
-                )}
-              </Transition>
-            </div>
-          );
-        }
-
-        if (
-          children.data.preview.images[0].resolutions[4] &&
-          sizeRatio < 1500
-        ) {
-          zeroNullData = true;
-          return (
-            <div className="imgDiv" key={i}>
-              <h2 className="titlesLeft">
-                <Icon type="tag-o" />
-                {this.state.subreddit}
-              </h2>
-              <p className="titleText">{children.data.title}</p>
-              <Transition
-                in={true}
-                appear={true}
-                unmountOnExit
-                mountOnEnter
-                timeout={1000}
-              >
-                {status => (
-                  <img
-                    className={`image transition--${status}`}
-                    src={this.removeHtmlFromUrl(
-                      children.data.preview.images[0].resolutions[4].url
                     )}
                     alt="{logo}"
                   />
