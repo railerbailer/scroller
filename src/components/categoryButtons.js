@@ -10,7 +10,7 @@ class CategoryButtons extends Component {
     const categories = ["NSFW", "SFW", "ART", "ANIMALS", "FOOD"];
     const buttons = categories.map((category, key) => (
       <Button key={key} className={category}>
-        <Link to={`/${category}/ `}>{category}</Link>
+        <Link to={`/${category}`}>{category}</Link>
       </Button>
     ));
     return buttons;

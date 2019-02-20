@@ -1,51 +1,20 @@
 import React, { Component } from "react";
 import "../App.css";
-import {
-  Icon,
-  Button,
-  Spin,
-  message,
-  notification,
-  Menu,
-  Dropdown,
-  AutoComplete,
-  Switch
-} from "antd";
+import { Icon, Button, Menu, Dropdown, AutoComplete, Switch } from "antd";
 import { Transition } from "react-transition-group";
-
+import { Link } from "react-router-dom";
 class TopMenu extends Component {
-  state = {
-    isSearchActivated: true,
-    isDropDownShowing: true
-  };
-
-  showDropdown = () => {
-    this.setState({ isDropDownShowing: !this.state.isDropDownShowing });
-  };
-
-  searchBoxOpenClose = () => {
-    this.setState({ isSearchActivated: !this.state.isSearchActivated });
-  };
-  onSelect = value => {
-    this.getSubreddit(value);
-    this.searchBoxOpenClose();
-  };
   renderMenu = () => {
     const categories = ["NSFW", "SFW", "ART", "ANIMALS", "FOOD"];
-    const menuItems = categories.map((category, key) =>   (
+    const menuItems = categories.map((category, key) => (
       <Menu.Item key={key}>
-        <div onClick={e => this.changeCat(e, category)}>{category}</div>
+        <Button onClick={() => this.props.changeCategory(category)}>
+        <Link to={`/${category}`}>{category}</Link>
+        </Button>
       </Menu.Item>
     ));
     return (
       <Menu theme="dark">
-        <Menu.Item>
-          <Icon
-            onClick={this.showDropdown}
-            type="close"
-            style={{ color: "white", fontSize: "22px" }}
-          />
-        </Menu.Item>
         <Menu.Item disabled>{this.props.category}</Menu.Item>
         <Menu.Divider />
         {menuItems}
@@ -63,7 +32,7 @@ class TopMenu extends Component {
       <div className="topMenuWrapper">
         <div className="searchWrapper">
           <Transition
-            in={this.state.isSearchActivated}
+            in={this.props.isSearchActivated}
             unmountOnExit
             mountOnEnter
             timeout={100}
@@ -74,19 +43,15 @@ class TopMenu extends Component {
                 autoFocus
                 className={`autocomplete--${status}`}
                 // dataSource={this.state.dataSource}
-                onBlur={() =>
-                  this.setState({
-                    isSearchActivated: false
-                  })
-                }
-                onSelect={this.onSelect}
-                onSearch={this.handleSearch}
+                onBlur={() => this.props.searchBoxOpenClose()}
+                onSelect={this.props.onSelect}
+                onSearch={this.props.handleSearch}
               />
             )}
           </Transition>
 
           <Transition
-            in={!this.state.isSearchActivated}
+            in={!this.props.isSearchActivated}
             unmountOnExit
             mountOnEnter
             timeout={0}
@@ -95,7 +60,7 @@ class TopMenu extends Component {
               <Button
                 ghost
                 className={`searchButton--${status}`}
-                onClick={() => this.searchBoxOpenClose()}
+                onClick={() => this.props.searchBoxOpenClose()}
               >
                 <Icon type="search" />
               </Button>
@@ -106,13 +71,19 @@ class TopMenu extends Component {
         <h1 className="logo">sliddit.</h1>
 
         <Dropdown
-          visible={this.state.isDropDownShowing}
+          visible={this.props.isDropDownShowing}
           overlay={this.renderMenu()}
-          onClick={this.showDropdown}
+          onClick={this.props.showDropdown}
         >
-          <Button ghost className="settings-icon">
-            <Icon type="setting" className="chooseCat" />
-          </Button>
+          {this.props.isDropDownShowing ? (
+            <Button ghost className="settings-icon">
+              <Icon type="close" className="chooseCat" />
+            </Button>
+          ) : (
+            <Button ghost className="settings-icon">
+              <Icon type="setting" className="chooseCat" />
+            </Button>
+          )}
         </Dropdown>
       </div>
     );
