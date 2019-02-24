@@ -3,6 +3,7 @@ import "../App.css";
 
 import CategoryButtons from "./categoryButtons.js";
 import MediaSlider from "./mediaSlider";
+import TopMenu from "./topMenu.js";
 
 import "antd/dist/antd.css";
 
@@ -13,13 +14,9 @@ class AppContainer extends Component {
     return (
       <BrowserRouter>
         <React.Fragment>
-          <Route path="/:category" component={MediaSlider} />
-          <Route path="/NSFW/:subreddit" component={MediaSlider} />
-          <Route path="/SFW/:subreddit" component={MediaSlider} />
-          <Route path="/ART/:subreddit" component={MediaSlider} />
-          <Route path="/ANIMALS/:subreddit" component={MediaSlider} />
-          <Route path="/FOOD/:subreddit" component={MediaSlider} />
-          <Route path="/" exact component={CategoryButtons} />
+          <Route path="/:category/:subreddit" exact component={MediaSlider} />
+          <Route path="/:category" exact component={MediaSlider} />
+          <Route path="/" exact component={MediaSlider} />
         </React.Fragment>
       </BrowserRouter>
     );

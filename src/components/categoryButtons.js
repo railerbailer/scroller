@@ -3,13 +3,16 @@ import "../App.css";
 import { Button, message } from "antd";
 import "antd/dist/antd.css";
 import { Link } from "react-router-dom";
+import * as utils from "../utils/utils.js";
 
 class CategoryButtons extends Component {
   
   renderMenu = () => {
     const categories = ["NSFW", "SFW", "ART", "ANIMALS", "FOOD"];
     const buttons = categories.map((category, key) => (
-      <Button key={key} className={category}>
+      <Button 
+      onClick={()=>this.props.changeCategory(utils.dataHandler(utils.shuffleArray(category)))} 
+      key={key} className={category}>
         <Link to={`/${category}`}>{category}</Link>
       </Button>
     ));

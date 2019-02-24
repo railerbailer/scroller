@@ -8,7 +8,6 @@ import {
 
 export const dataHandler = props => {
   props = props.toLowerCase(); 
-  console.log(props)
   if (props === "nsfw") {
     return NSFW;
   }

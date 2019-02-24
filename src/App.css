@@ -115,6 +115,13 @@
   padding: 20%;
 }
 
+.categoryModal{
+  position: absolute;
+  display: block;
+  top: 2px;
+  right: 50%;
+}
+
 .NSFW {
   grid-area: header;
   min-height: 100px;

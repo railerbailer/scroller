@@ -8,8 +8,8 @@ class TopMenu extends Component {
     const categories = ["NSFW", "SFW", "ART", "ANIMALS", "FOOD"];
     const menuItems = categories.map((category, key) => (
       <Menu.Item key={key}>
-        <Button onClick={() => this.props.changeCategory(category)}>
-        <Link to={`/${category}`}>{category}</Link>
+        <Button>
+          <Link to={`/${category}`}>{category}</Link>
         </Button>
       </Menu.Item>
     ));

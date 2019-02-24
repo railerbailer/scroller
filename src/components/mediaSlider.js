@@ -4,12 +4,14 @@ import { Icon, Spin, message } from "antd";
 import { debounce } from "lodash";
 import { Transition } from "react-transition-group";
 import Swipeable from "react-swipeable";
-import { Redirect } from "react-router-dom";
+import { Redirect , Link} from "react-router-dom";
 import * as utils from "../utils/utils.js";
 import TopMenu from "./topMenu.js";
+import CategoryButtons from "./categoryButtons";
 
 let goBack = [];
 let goBackIndex = 0;
+let stopCatching = 0;
 class MediaSlider extends Component {
   constructor(props) {
     super(props);
@@ -29,11 +31,12 @@ class MediaSlider extends Component {
     };
   }
   componentDidMount() {
-    this.getSubreddit(utils.shuffleArray(this.props.match.params.category));
-
+    this.getSubreddit(
+      this.props.match.params.subreddit || 'nsfw'
+    );
     message.info(
       `Category is ${
-        this.props.match.params.category
+        this.props.match.params.category || 'NSFW'
       }, press or swipe right to shuffle subreddit`
     );
   }
@@ -49,6 +52,7 @@ class MediaSlider extends Component {
       this.state.sliderData.length &&
       this.moreSubreddits();
   }, 100);
+
   previous = async () => {
     if (this.state.activeSlide) {
       const infiniteScroll =
@@ -77,7 +81,7 @@ class MediaSlider extends Component {
       !this.state.isLoading &&
         this.getSubreddit(
           utils.shuffleArray(
-            utils.dataHandler(this.props.match.params.category)
+            utils.dataHandler(this.props.match.params.category || 'NSFW')
           )
         );
       if (
@@ -152,12 +156,14 @@ class MediaSlider extends Component {
   };
 
   getSubreddit = async subreddit => {
-    console.log(subreddit);
+    console.log('GETSUBREDDIT', subreddit);
+    // this.props.match.params.category && this.props.history.push(`/${this.props.match.params.category}/${this.state.subreddit}`);
     await this.setState({
       subreddit: subreddit,
       sliderData: [],
       isLoading: true
     });
+
     //Om det blev fel kan det vara annat än url som inte finns...
     await fetch(
       `https://www.reddit.com/r/${this.state.subreddit}.json?limit=100`
@@ -169,15 +175,21 @@ class MediaSlider extends Component {
           before: jsonData.data.after
         });
         let children = jsonData.data.children;
-        console.log(children);
+        console.log(children)
         this.dataToHtml(children);
       })
-      .catch(() => {
-        // this.getSubreddit(
-        //   utils.shuffleArray(
-        //     utils.dataHandler(this.props.match.params.category)
-        //   )
-        // );
+      .catch((e) => {
+        console.log('errorERRORROEROEOR',e)
+        stopCatching = stopCatching + 1;
+        if (stopCatching > 10) {
+          console.log("error");
+          stopCatching = 0;
+        } else
+          this.getSubreddit(
+            utils.shuffleArray(
+              utils.dataHandler(this.props.match.params.category || 'NSFW')
+            )
+          );
       });
     this.setState({ isLoading: false });
   };
@@ -201,7 +213,7 @@ class MediaSlider extends Component {
       .catch(() => {
         this.getSubreddit(
           utils.shuffleArray(
-            utils.dataHandler(this.props.match.params.category)
+            utils.dataHandler(this.props.match.params.category || 'NSFW')
           )
         );
       });
@@ -227,7 +239,7 @@ class MediaSlider extends Component {
       .catch(() => {
         this.getSubreddit(
           utils.shuffleArray(
-            utils.dataHandler(this.props.match.params.category)
+            utils.dataHandler(this.props.match.params.category || 'NSFW')
           )
         );
       });
@@ -247,22 +259,24 @@ class MediaSlider extends Component {
       value = "Type your search";
     }
     let result = utils
-      .dataHandler(this.props.match.params.category)
+      .dataHandler(this.props.match.params.category || 'NSFW')
       .filter(str => str.toLowerCase().includes(value.toLowerCase()));
     result = result.reverse();
     result.push(value);
     result = result.reverse();
     this.setState({ dataSource: result.slice(0, 7) });
-    console.log(this.state.dataSource);
   };
+
   onSelect = value => {
     this.getSubreddit(value);
     this.searchBoxOpenClose();
   };
+
   searchBoxOpenClose = () => {
     this.setState({ isSearchActivated: !this.state.isSearchActivated });
   };
-  showDropdown = () => {
+
+  showDropDown = () => {
     this.setState({ isDropDownShowing: !this.state.isDropDownShowing });
   };
 
@@ -271,7 +285,17 @@ class MediaSlider extends Component {
 
     return (
       <>
-        <TopMenu category={this.props.match.params.category} onSelect={this.onSelect} handleSearch={this.handleSearch} searchBoxOpenClose={this.searchBoxOpenClose} showDropdown={this.showDropdown} changeCategory={utils.dataHandler} isSearchActivated={this.state.isSearchActivated} isDropDownShowing={this.state.isDropDownShowing}/>
+        <TopMenu
+          category={this.props.match.params.category || 'NSFW'}
+          onSelect={this.onSelect}
+          changeCategory={utils.dataHandler}
+          handleSearch={this.handleSearch}
+          searchBoxOpenClose={this.searchBoxOpenClose}
+          showDropDown={this.showDropDown}
+          isSearchActivated={this.state.isSearchActivated}
+          isDropDownShowing={this.state.isDropDownShowing}
+        />
+        {!this.props.match.params.category && <CategoryButtons changeCategory={this.getSubreddit} />}
         <Swipeable
           className="wrapper"
           onKeyDown={this.handleKeyDown}
@@ -319,6 +343,7 @@ class MediaSlider extends Component {
             </div>
           )}
           <div className="downDiv">
+          <label>{this.state.subreddit}</label>
             <button onClick={this.next} className="iconDownClicker">
               <Icon className="iconDown" type="arrow-down" />
             </button>
@@ -330,9 +355,9 @@ class MediaSlider extends Component {
 
   dataToHtml = data => {
     let datavar = data.map((children, i) => {
+      if(!children.data.preview) return null;
       const { preview, thumbnail, media, title, post_hint } = children.data;
-      const { images = [], reddit_video_preview } = preview;
-      const imageQuality = images[0].resolutions.length;
+      const { images, reddit_video_preview } = preview;
       const { imageQ } = this.state;
 
       if (post_hint === "image")
@@ -350,10 +375,9 @@ class MediaSlider extends Component {
                 <img
                   className={`image transition--${status}`}
                   src={utils.removeHtmlFromUrl(
-                    images[0].resolutions[imageQ].url &&
-                      images[0].resolutions[imageQ].url
+                    images[0].resolutions[imageQ] && images[0].resolutions[imageQ].url || 'not working'
                   )}
-                  alt={utils.removeHtmlFromUrl(images[0].source.url)}
+                  alt={utils.removeHtmlFromUrl(images[0].source.url || 'not working')}
                 />
               )}
             </Transition>
@@ -379,7 +403,7 @@ class MediaSlider extends Component {
                   playsInline
                   autoPlay={this.state.autoPlay}
                   poster={utils.removeHtmlFromUrl(
-                    images[0].resolutions[imageQ].url || thumbnail
+                    images[0].resolutions[imageQ] && images[0].resolutions[imageQ].url || thumbnail || 'not working'
                   )}
                   preload="auto"
                   loop={this.state.loop}
@@ -419,7 +443,7 @@ class MediaSlider extends Component {
         );
     });
 
-    this.setState({ sliderData: datavar.filter(e => e !== null) });
+    this.setState({ sliderData: datavar.filter(e => e) });
   };
 }
 
