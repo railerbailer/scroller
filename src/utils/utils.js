@@ -1,29 +1,29 @@
 import {
-  subredditArray,
-  NSFW,
-  artArray,
-  foodArray,
-  animalsArray
+  sfw,
+  nsfw,
+  art,
+  food,
+  animals
 } from "../data/subreddits.js";
 
 export const dataHandler = props => {
   props = props.toLowerCase(); 
   if (props === "nsfw") {
-    return NSFW;
+    return nsfw;
   }
   if (props === "sfw") {
-    return subredditArray;
+    return sfw;
   }
   if (props === "art") {
-    return artArray;
+    return art;
   }
   if (props === "food") {
-    return foodArray;
+    return food;
   }
   if (props === "animals") {
-    return animalsArray;
+    return animals;
   } else {
-    return subredditArray;
+    return sfw;
   }
 };
 

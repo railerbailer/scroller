@@ -5,7 +5,7 @@ import { Transition } from "react-transition-group";
 import { Link } from "react-router-dom";
 class TopMenu extends Component {
   renderMenu = () => {
-    const categories = ["NSFW", "SFW", "ART", "ANIMALS", "FOOD"];
+    const categories = ["nsfw", "sfw", "art", "animals", "food"];
     const menuItems = categories.map((category, key) => (
       <Menu.Item key={key}>
         <Button>
@@ -73,7 +73,7 @@ class TopMenu extends Component {
         <Dropdown
           visible={this.props.isDropDownShowing}
           overlay={this.renderMenu()}
-          onClick={this.props.showDropdown}
+          onClick={this.props.showDropDown}
         >
           {this.props.isDropDownShowing ? (
             <Button ghost className="settings-icon">

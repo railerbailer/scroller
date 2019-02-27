@@ -4,12 +4,12 @@ export const testArray=[
     {name: '3'},
 
 ]
-export const nsfwAll=[
+export const nsfwall=[
 'nsfw+gonewild+LegalTeens+RealGirls+ass+Amateur+Celebs+collegesluts+Blowjobs+thick+PetiteGoneWild+rule34+asstastic+nsfw_gifs+GirlsFinishingTheJob+HappyEmbarrassedGirls+TinyTits+LipsThatGrip+BustyPetite+holdthemoan+wifesharing+palegirls+TittyDrop+trashyboners+cosplaygirls'
 ]
 
 // =Arrayformula(IF( A1:A="",,"'"&A1:A&"',"))
-export const animalsArray=[
+export const animals=[
 'Aww',
 'Sneks',
 'EmusRunningFromStuff',
@@ -24,7 +24,7 @@ export const animalsArray=[
 
 ]
 
-export const artArray=[
+export const art=[
 'Art',
 
 'addon',
@@ -143,7 +143,7 @@ export const artArray=[
 
 'womenartists',
 ]
-export const foodArray=[
+export const food=[
 'sousvide',
 'appetizers',
 'sousvide',
@@ -219,7 +219,7 @@ export const manmadeArray=[
 'StarshipPorn',
 'AlbumArtPorn',
 ]
-export const subredditArray= [
+export const sfw= [
 'pics'
 ,'PhotoshopBattles'
 ,'perfecttiming'
@@ -276,7 +276,7 @@ export const subredditArray= [
 
 ]
 
-export const NSFW=[
+export const nsfw=[
 'gonewild',
 'nsfw',
 'NSFW_GIF',

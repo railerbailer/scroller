@@ -8,10 +8,10 @@ import * as utils from "../utils/utils.js";
 class CategoryButtons extends Component {
   
   renderMenu = () => {
-    const categories = ["NSFW", "SFW", "ART", "ANIMALS", "FOOD"];
+    const categories = ["nsfw", "sfw", "art", "animals", "food"];
     const buttons = categories.map((category, key) => (
       <Button 
-      onClick={()=>this.props.changeCategory(utils.dataHandler(utils.shuffleArray(category)))} 
+      onClick={()=>this.props.changeCategory(utils.shuffleArray(utils.dataHandler((category))))} 
       key={key} className={category}>
         <Link to={`/${category}`}>{category}</Link>
       </Button>

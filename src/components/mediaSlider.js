@@ -4,7 +4,7 @@ import { Icon, Spin, message } from "antd";
 import { debounce } from "lodash";
 import { Transition } from "react-transition-group";
 import Swipeable from "react-swipeable";
-import { Redirect , Link} from "react-router-dom";
+import { Redirect, Link } from "react-router-dom";
 import * as utils from "../utils/utils.js";
 import TopMenu from "./topMenu.js";
 import CategoryButtons from "./categoryButtons";
@@ -27,17 +27,22 @@ class MediaSlider extends Component {
       activeSlide: 0,
       imageQ: 1,
       isSearchActivated: false,
-      isDropDownShowing: true
+      isDropDownShowing: false
     };
   }
   componentDidMount() {
-    this.getSubreddit(
-      this.props.match.params.subreddit || 'nsfw'
-    );
+    !this.props.match.params.subreddit &&
+      this.props.match.params.category &&
+      this.getSubreddit(
+        utils.shuffleArray(
+          utils.dataHandler(this.props.match.params.category || "art")
+        )
+      );
+    this.props.match.params.subreddit &&
+      this.getSubreddit(this.props.match.params.subreddit);
     message.info(
-      `Category is ${
-        this.props.match.params.category || 'NSFW'
-      }, press or swipe right to shuffle subreddit`
+      `Category is ${this.props.match.params.category ||
+        "art"}, press or swipe right to shuffle subreddit`
     );
   }
 
@@ -53,10 +58,10 @@ class MediaSlider extends Component {
       this.moreSubreddits();
   }, 100);
 
-  previous = async () => {
+  previous = () => {
     if (this.state.activeSlide) {
       const infiniteScroll =
-        (await this.state.activeSlide) <= 0
+        this.state.activeSlide <= 0
           ? this.state.sliderData.length && this.state.sliderData.length - 1
           : this.state.activeSlide - 1;
       this.setState({ activeSlide: infiniteScroll });
@@ -65,10 +70,10 @@ class MediaSlider extends Component {
     // this.state.activeSlide===0 && this.goBackSubreddits();
   };
 
-  switchCat = async () => {
+  switchCat = () => {
     this.state.isDropDownShowing && this.showDropDown();
     this.setState({ isVideoLoading: true });
-    await this.setState({ activeSlide: 0 });
+    this.setState({ activeSlide: 0 });
     if (goBackIndex > 0) {
       goBackIndex = goBackIndex - 1;
       if (this.state.subreddit === goBack[goBack.length - 1 - goBackIndex]) {
@@ -81,14 +86,14 @@ class MediaSlider extends Component {
       !this.state.isLoading &&
         this.getSubreddit(
           utils.shuffleArray(
-            utils.dataHandler(this.props.match.params.category || 'NSFW')
+            utils.dataHandler(this.props.match.params.category || "art")
           )
         );
       if (
         goBackIndex === 0 &&
         goBack[goBack.length - 1] !== this.state.subreddit
       ) {
-        await goBack.push(this.state.subreddit);
+        goBack.push(this.state.subreddit);
       }
     }
   };
@@ -156,9 +161,9 @@ class MediaSlider extends Component {
   };
 
   getSubreddit = async subreddit => {
-    console.log('GETSUBREDDIT', subreddit);
+    console.log("GETSUBREDDIT", subreddit);
     // this.props.match.params.category && this.props.history.push(`/${this.props.match.params.category}/${this.state.subreddit}`);
-    await this.setState({
+    this.setState({
       subreddit: subreddit,
       sliderData: [],
       isLoading: true
@@ -175,11 +180,11 @@ class MediaSlider extends Component {
           before: jsonData.data.after
         });
         let children = jsonData.data.children;
-        console.log(children)
+        console.log(children);
         this.dataToHtml(children);
       })
-      .catch((e) => {
-        console.log('errorERRORROEROEOR',e)
+      .catch(e => {
+        console.log("errorERRORROEROEOR", e);
         stopCatching = stopCatching + 1;
         if (stopCatching > 10) {
           console.log("error");
@@ -187,10 +192,11 @@ class MediaSlider extends Component {
         } else
           this.getSubreddit(
             utils.shuffleArray(
-              utils.dataHandler(this.props.match.params.category || 'NSFW')
+              utils.dataHandler(this.props.match.params.category || "art")
             )
           );
       });
+
     this.setState({ isLoading: false });
   };
 
@@ -213,7 +219,7 @@ class MediaSlider extends Component {
       .catch(() => {
         this.getSubreddit(
           utils.shuffleArray(
-            utils.dataHandler(this.props.match.params.category || 'NSFW')
+            utils.dataHandler(this.props.match.params.category || "NSFW")
           )
         );
       });
@@ -239,7 +245,7 @@ class MediaSlider extends Component {
       .catch(() => {
         this.getSubreddit(
           utils.shuffleArray(
-            utils.dataHandler(this.props.match.params.category || 'NSFW')
+            utils.dataHandler(this.props.match.params.category || "art")
           )
         );
       });
@@ -259,7 +265,7 @@ class MediaSlider extends Component {
       value = "Type your search";
     }
     let result = utils
-      .dataHandler(this.props.match.params.category || 'NSFW')
+      .dataHandler(this.props.match.params.category || "art")
       .filter(str => str.toLowerCase().includes(value.toLowerCase()));
     result = result.reverse();
     result.push(value);
@@ -281,12 +287,14 @@ class MediaSlider extends Component {
   };
 
   render() {
+    console.log(this.props.history);
     console.log(this.props.match);
+    console.log("SUBREDDIT", this.state.subreddit);
 
     return (
       <>
         <TopMenu
-          category={this.props.match.params.category || 'NSFW'}
+          category={this.props.match.params.category || "art"}
           onSelect={this.onSelect}
           changeCategory={utils.dataHandler}
           handleSearch={this.handleSearch}
@@ -295,7 +303,9 @@ class MediaSlider extends Component {
           isSearchActivated={this.state.isSearchActivated}
           isDropDownShowing={this.state.isDropDownShowing}
         />
-        {!this.props.match.params.category && <CategoryButtons changeCategory={this.getSubreddit} />}
+        {!this.props.match.params.category && (
+          <CategoryButtons changeCategory={this.getSubreddit} />
+        )}
         <Swipeable
           className="wrapper"
           onKeyDown={this.handleKeyDown}
@@ -343,10 +353,12 @@ class MediaSlider extends Component {
             </div>
           )}
           <div className="downDiv">
-          <label>{this.state.subreddit}</label>
-            <button onClick={this.next} className="iconDownClicker">
-              <Icon className="iconDown" type="arrow-down" />
-            </button>
+            <div className="center">
+              <label>{this.state.subreddit}</label>
+              <button onClick={this.next} className="iconDownClicker">
+                <Icon className="iconDown" type="arrow-down" />
+              </button>
+            </div>
           </div>
         </Swipeable>
       </>
@@ -355,7 +367,7 @@ class MediaSlider extends Component {
 
   dataToHtml = data => {
     let datavar = data.map((children, i) => {
-      if(!children.data.preview) return null;
+      if (!children.data.preview) return null;
       const { preview, thumbnail, media, title, post_hint } = children.data;
       const { images, reddit_video_preview } = preview;
       const { imageQ } = this.state;
@@ -375,9 +387,13 @@ class MediaSlider extends Component {
                 <img
                   className={`image transition--${status}`}
                   src={utils.removeHtmlFromUrl(
-                    images[0].resolutions[imageQ] && images[0].resolutions[imageQ].url || 'not working'
+                    (images[0].resolutions[imageQ] &&
+                      images[0].resolutions[imageQ].url) ||
+                      "not working"
                   )}
-                  alt={utils.removeHtmlFromUrl(images[0].source.url || 'not working')}
+                  alt={utils.removeHtmlFromUrl(
+                    images[0].source.url || "not working"
+                  )}
                 />
               )}
             </Transition>
@@ -403,7 +419,10 @@ class MediaSlider extends Component {
                   playsInline
                   autoPlay={this.state.autoPlay}
                   poster={utils.removeHtmlFromUrl(
-                    images[0].resolutions[imageQ] && images[0].resolutions[imageQ].url || thumbnail || 'not working'
+                    (images[0].resolutions[imageQ] &&
+                      images[0].resolutions[imageQ].url) ||
+                      thumbnail ||
+                      "not working"
                   )}
                   preload="auto"
                   loop={this.state.loop}
